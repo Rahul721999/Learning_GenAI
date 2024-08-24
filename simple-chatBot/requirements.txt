@@ -1,5 +1,2 @@
 streamlit
-openai
-langchain
-nltk
-scikit-learn
+google-generativeai

@@ -1,42 +1,50 @@
-# 1. Importing necessary libraries
 import streamlit as st
-import random 
-import time 
+import google.generativeai as genai
 
-# 2. Creating a title for our streamlit web application
-st.title("Simple chat")
+# Configure the Google Gemini API key
+genai.configure(api_key="")
 
-# 3. Initializing the chat history in the session state (How the chatbot tracks things)
-if "messages" not in st.session_state: # Check if the "message" exists in session
-    st.session_state.message = [] # Initialize "message" as an empty list
+# Initialize the Generative Model
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 4. Displaying the existing chat messages from the user and the chatbot
-for message in st.session_state.message: # For every message in the chat history
-    with st.chat_message(message["role"]): # Create a chat messge box
-        st.markdown(message["content"]) # Display the content of the message
+# Streamlit app title
+st.title("Simple Chatbot")
 
+# Initialize the chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# 5. Accepting the user intput and adding it to the message history
-if prompt := st.chat_input("What is up?"): # If user enters a message
-    with st.chat_message("user"): # Display user's message in a chat message box
-        st.markdown(prompt) # Display the user's message
-    st.session_state.message.append({"role": "user", "content" : prompt}) # Adding user's message to the chat History
+# Display existing chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# 6. Generating and displaying the assistant's response
-with st.chat_message("assistant"): # Create a chat message box for assistant's response
-    message_placeholder = st.empty() # Create an empty placeholder for the assistant's msg
-    full_response = "" # Initialize an empty string for the full response
-    assistant_response = random.choice([
-        "Hi there! How can I assist you today?",
-        "Hi! Is there anything I can help you with?",
-        "Do you need help?"
-    ]) # Select the assistant's response randomly
+# Accept user input
+user_input = st.chat_input("What is up?")
 
-    # Simulate "typing" effect by gradually revealing the response
-    for chunk in assistant_response.split(): # For each word in the response
-        full_response += chunk + " "
-        time.sleep(0.005) # Small delay between each word, for smooth animation
-        message_placeholder.markdown(full_response + " ") # Update place_holder with curr response & a blinking cursor
+if user_input:
+    # Display user's message
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    
+    # Add user's message to the history
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-    message_placeholder.markdown(full_response) # Remove cursor & display full resp
-    st.session_state.message.append({"role": "assistant", "content" : full_response})
+    # Generate response using Google Gemini
+    with st.chat_message("assistant"):
+        response_placeholder = st.empty()
+        full_response = ""
+
+        # Generate content with the model
+        response = model.generate_content(user_input)
+        assistant_response = response.text
+
+        # Simulate typing effect
+        for chunk in assistant_response.split():
+            full_response += chunk + " "
+            response_placeholder.markdown(full_response + " ")
+
+        response_placeholder.markdown(full_response)
+
+        # Add assistant's response to the history
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
