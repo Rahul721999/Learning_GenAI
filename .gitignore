@@ -1,5 +1,6 @@
 # Python virtual environment
 chatbot-env/
+*env/
 
 # Python specific files
 __pycache__/
